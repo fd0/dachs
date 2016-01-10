@@ -1,0 +1,11 @@
+{
+	"version": 0,
+	"dependencies": [
+		{
+			"importpath": "github.com/jessevdk/go-flags",
+			"repository": "https://github.com/jessevdk/go-flags",
+			"revision": "d91b7c5a5ce0b1d99d765ec3fb20ab590e52ddcb",
+			"branch": "master"
+		}
+	]
+}

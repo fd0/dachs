@@ -14,23 +14,17 @@ import (
 
 // Config holds all configuration parameters set in the config file.
 type Config struct {
-	Interval       int
-	StateDirectory string `toml:"state_dir"`
+	Interval int
+	StateDir string `toml:"state_dir"`
 
 	Commands []Command `toml:"command"`
 }
 
-// Command holds all data needed to start a command.
-type Command struct {
-	Run    string
-	Filter []string
-
-	state string
-}
-
 var opts = &struct {
-	Verbose bool   `short:"v" long:"verbose"                   description:"be verbose"`
-	Config  string `short:"c" long:"config" env:"DACHS_CONFIG" description:"use this config file"`
+	Verbose  bool   `short:"v"   long:"verbose"                       description:"be verbose"`
+	Config   string `short:"c"   long:"config"  env:"DACHS_CONFIG"    description:"use this config file"`
+	StateDir string `short:"s"   long:"state"   env:"DACHS_STATE_DIR" description:"directory to use for saving states"`
+	Force    bool   `short:"f"   long:"force"                         description:"force update of all commands"`
 }{}
 
 // V prints the message when verbose is active.
@@ -89,8 +83,6 @@ func findConfig() (string, error) {
 		dirs = append(dirs, "/etc/xdg")
 	}
 
-	fmt.Printf("dirs: %v\n", dirs)
-
 	for _, dir := range dirs {
 		filename := filepath.Join(dir, "dachs.conf")
 		_, err := os.Stat(filename)
@@ -103,6 +95,20 @@ func findConfig() (string, error) {
 	return "", errors.New("no config file found")
 }
 
+// cacheDir returns the cache directory according to the XDG specification.
+func cacheDir() string {
+	if d := os.Getenv("XDG_CACHE_DIR"); d != "" {
+		return d
+	}
+
+	user, err := user.Current()
+	if err == nil {
+		return filepath.Join(user.HomeDir, ".cache")
+	}
+
+	return ""
+}
+
 func main() {
 	var parser = flags.NewParser(opts, flags.Default)
 
@@ -110,10 +116,7 @@ func main() {
 	if e, ok := err.(*flags.Error); ok && e.Type == flags.ErrHelp {
 		os.Exit(0)
 	}
-
-	if err != nil {
-		os.Exit(1)
-	}
+	Erx(err, 1)
 
 	if opts.Config == "" {
 		opts.Config, err = findConfig()
@@ -124,8 +127,47 @@ func main() {
 	_, err = toml.DecodeFile(opts.Config, &cfg)
 	Erx(err, 1)
 
+	// update to defaults
+	if cfg.Interval == 0 {
+		cfg.Interval = 3600
+	}
+
+	if opts.Force {
+		cfg.Interval = 0
+	}
+
+	var statedir = filepath.Join(cacheDir(), "dachs-state")
+	if cfg.StateDir != "" {
+		statedir = cfg.StateDir
+	}
+
+	if opts.StateDir != "" {
+		statedir = opts.StateDir
+	}
+
+	V("using state directory %v\n", statedir)
+
+	_, err = os.Stat(cfg.StateDir)
+	if err != nil && os.IsNotExist(err) {
+		V("creating state dir %v\n", cfg.StateDir)
+		Erx(os.MkdirAll(cfg.StateDir, 0700), 1)
+	}
+
 	for _, cmd := range cfg.Commands {
-		cmd.state = cfg.StateDirectory
-		Er(cmd.Execute())
+		if cmd.Interval == 0 {
+			cmd.Interval = cfg.Interval
+		}
+
+		diff, err := cmd.Execute(cfg.StateDir)
+		if len(diff) > 0 {
+			fmt.Printf("diff for command %v\n", cmd.Name)
+			fmt.Printf("============================\n")
+			fmt.Print(string(diff))
+			fmt.Println()
+		}
+
+		if err != nil {
+			E("error executing %v: %v\n", cmd.Run, err)
+		}
 	}
 }

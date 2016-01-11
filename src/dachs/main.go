@@ -147,10 +147,10 @@ func main() {
 
 	V("using state directory %v\n", statedir)
 
-	_, err = os.Stat(cfg.StateDir)
+	_, err = os.Stat(statedir)
 	if err != nil && os.IsNotExist(err) {
-		V("creating state dir %v\n", cfg.StateDir)
-		Erx(os.MkdirAll(cfg.StateDir, 0700), 1)
+		V("creating state dir %v\n", statedir)
+		Erx(os.MkdirAll(statedir, 0700), 1)
 	}
 
 	for _, cmd := range cfg.Commands {
@@ -158,7 +158,7 @@ func main() {
 			cmd.Interval = cfg.Interval
 		}
 
-		diff, err := cmd.Execute(cfg.StateDir)
+		diff, err := cmd.Execute(statedir)
 		if len(diff) > 0 {
 			fmt.Printf("diff for command %v\n", cmd.Name)
 			fmt.Printf("============================\n")

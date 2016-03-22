@@ -140,10 +140,10 @@ func Compare(oldOutput, newOutput []byte) (output []byte, err error) {
 
 	tempdir, err := ioutil.TempDir("", "dachs-compare-")
 	defer func() {
-		// e := os.RemoveAll(tempdir)
-		// if err != nil {
-		// 	err = e
-		// }
+		e := os.RemoveAll(tempdir)
+		if err != nil {
+			err = e
+		}
 	}()
 
 	err = writeToFile(filepath.Join(tempdir, "new"), newOutput)

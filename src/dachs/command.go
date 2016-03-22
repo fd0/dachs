@@ -40,7 +40,7 @@ func (c Command) Execute(statedir string) ([]byte, error) {
 
 	state, err := c.loadOldState()
 	if err != nil {
-		E("unable to read old state file: %v\n", err)
+		return nil, err
 	}
 
 	output, err := cmd.Output()
@@ -50,7 +50,7 @@ func (c Command) Execute(statedir string) ([]byte, error) {
 
 	diff, err := Compare(state, output)
 	if err != nil {
-		V("return error %#v\n", err)
+		return nil, err
 	}
 
 	return diff, c.saveNewState(output)

@@ -6,7 +6,8 @@ Watch for changes in outputs of commands and prints a report.
 
 # Installation
 
-Dachs requires Go version 1.4 or newer. To build dachs, run the following command:
+Dachs requires Go version 1.4 or newer to compile. To build dachs, run the
+following command:
 
 ```shell
 $ go run build.go
@@ -14,19 +15,11 @@ $ go run build.go
 
 Afterwards please find a binary of dachs in the current directory.
 
-# Development
+# Configuration
 
-Dachs is developed using the build tool [gb](https://getgb.io). It can be installed by running the following command:
+Have a look at the sample config file [`dachs.conf`](dachs.conf).
 
-```shell
-$ go get github.com/constabulary/gb/...
-```
 
-The program can be compiled using `gb` as follows:
-
-```shell
-$ gb build
-```
 
 # Compatibility
 

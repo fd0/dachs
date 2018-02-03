@@ -4,5 +4,3 @@ package main
 type Filter struct {
 	Run string
 }
-
-

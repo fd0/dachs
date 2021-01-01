@@ -1,5 +1,3 @@
-[![Build Status](https://travis-ci.org/fd0/dachs.svg?branch=master)](https://travis-ci.org/fd0/dachs)
-
 # dachs
 
 Watch for changes in outputs of commands and prints a report.
